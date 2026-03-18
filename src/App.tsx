@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Play, Code2 } from 'lucide-react';
 import * as Babel from '@babel/standalone';
 import ReactSandboxView from './views/ReactSandboxView';
@@ -16,7 +16,7 @@ function App() {
   const [consoleOutput, setConsoleOutput] = useState('');
   const [consoleError, setConsoleError] = useState<string | null>(null);
 
-  const handleRun = () => {
+  const handleRun = useCallback(() => {
     if (mode === 'react') {
       setCompiledPreview({ tsx: tsxCode, css: cssCode });
       return;
@@ -46,7 +46,21 @@ function App() {
     } catch (err: any) {
       setConsoleError(err?.message ?? String(err));
     }
-  };
+  }, [mode, tsxCode, cssCode, algoCode]);
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key.toLowerCase() !== 's') return;
+      if (!(event.metaKey || event.ctrlKey)) return;
+
+      event.preventDefault();
+      event.stopPropagation();
+      handleRun();
+    };
+
+    window.addEventListener('keydown', onKeyDown, { capture: true });
+    return () => window.removeEventListener('keydown', onKeyDown, { capture: true });
+  }, [handleRun]);
 
   return (
     <div className="h-screen w-screen flex flex-col bg-[#1e1e1e] text-slate-200 overflow-hidden font-sans">
