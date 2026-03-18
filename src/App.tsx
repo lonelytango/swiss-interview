@@ -66,20 +66,20 @@ function App() {
     <div className="h-screen w-screen flex flex-col bg-[#1e1e1e] text-slate-200 overflow-hidden font-sans">
       {/* Header */}
       <header className="h-14 shrink-0 flex items-center justify-between px-6 bg-[#0f0f0f] border-b border-[#2d2d2d]">
+      <div className="flex items-center gap-10">
         <div className="flex items-center gap-3 text-indigo-400">
           <Code2 size={24} />
           <div className="text-md font-semibold tracking-tight text-slate-100">Frontend Interview Sandbox</div>
         </div>
-        <div className="flex items-center gap-4">
-          <ModeSelector mode={mode} onChange={setMode} />
-          <button 
+        <button 
             onClick={handleRun}
-            className="group flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2 rounded-md transition-all text-sm font-medium shadow-[0_0_15px_rgba(79,70,229,0.3)] hover:shadow-[0_0_20px_rgba(79,70,229,0.5)] active:scale-95"
+            className="group flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-2 rounded-md transition-all text-sm font-medium shadow-[0_0_15px_rgba(79,70,229,0.3)] hover:shadow-[0_0_20px_rgba(79,70,229,0.5)] active:scale-95"
           >
             <Play size={16} className="fill-current group-hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.6)] transition-all" />
             Run Code
           </button>
         </div>
+          <ModeSelector mode={mode} onChange={setMode} />
       </header>
       
       {/* Workspace */}
