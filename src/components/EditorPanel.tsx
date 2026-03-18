@@ -1,4 +1,5 @@
-import Editor, { type Monaco } from '@monaco-editor/react';
+import { type Monaco } from '@monaco-editor/react';
+import CodeEditor from './CodeEditor';
 
 interface EditorPanelProps {
   tsxCode: string;
@@ -10,20 +11,6 @@ interface EditorPanelProps {
 export default function EditorPanel({ tsxCode, setTsxCode, cssCode, setCssCode }: EditorPanelProps) {
   
   const handleEditorBeforeMount = (monaco: Monaco) => {
-    monaco.editor.defineTheme('devview-dark', {
-      base: 'vs-dark',
-      inherit: true,
-      rules: [
-        // JSX
-        { token: 'tag', foreground: '569CD6' },
-        { token: 'tag.jsx', foreground: '569CD6' },
-        { token: 'delimiter.angle', foreground: '808080' },
-        { token: 'attribute.name', foreground: '9CDCFE' },
-        { token: 'attribute.value', foreground: 'CE9178' },
-      ],
-      colors: {},
-    });
-
     monaco.languages.typescript.typescriptDefaults.setCompilerOptions({
       jsx: monaco.languages.typescript.JsxEmit.ReactJSX,
       allowNonTsExtensions: true,
@@ -80,27 +67,12 @@ export default function EditorPanel({ tsxCode, setTsxCode, cssCode, setCssCode }
           Component.tsx
         </div>
         <div className="flex-1 min-h-0 pt-2 bg-[#1e1e1e]">
-          <Editor
+          <CodeEditor
             beforeMount={handleEditorBeforeMount}
             path="App.tsx"
-            height="100%"
-            defaultLanguage="typescript"
-            theme="devview-dark"
+            language="typescript"
             value={tsxCode}
-            onChange={(val) => setTsxCode(val || '')}
-            options={{
-              minimap: { enabled: false },
-              fontSize: 14,
-              fontFamily: '"JetBrains Mono", "Fira Code", monospace',
-              wordWrap: 'on',
-              formatOnPaste: true,
-              scrollBeyondLastLine: false,
-              tabSize: 2,
-              padding: { top: 8, bottom: 8 },
-              bracketPairColorization: { enabled: true },
-              guides: { bracketPairs: true },
-              matchBrackets: 'always',
-            }}
+            onChange={setTsxCode}
           />
         </div>
       </div>
@@ -111,23 +83,7 @@ export default function EditorPanel({ tsxCode, setTsxCode, cssCode, setCssCode }
           styles.css
         </div>
         <div className="flex-1 min-h-0 pt-2 bg-[#1e1e1e]">
-          <Editor
-            height="100%"
-            defaultLanguage="css"
-            theme="vs-dark"
-            value={cssCode}
-            onChange={(val) => setCssCode(val || '')}
-            options={{
-              minimap: { enabled: false },
-              fontSize: 14,
-              fontFamily: '"JetBrains Mono", "Fira Code", monospace',
-              wordWrap: 'on',
-              formatOnPaste: true,
-              scrollBeyondLastLine: false,
-              tabSize: 2,
-              padding: { top: 8, bottom: 8 }
-            }}
-          />
+          <CodeEditor path="styles.css" language="css" value={cssCode} onChange={setCssCode} />
         </div>
       </div>
     </div>

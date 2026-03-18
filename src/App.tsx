@@ -1,69 +1,14 @@
 import { useState } from 'react';
-import EditorPanel from './components/EditorPanel';
-import PreviewPanel from './components/PreviewPanel';
-import AlgorithmPanel from './components/AlgorithmPanel';
-import ConsolePanel from './components/ConsolePanel';
 import { Play, Code2 } from 'lucide-react';
 import * as Babel from '@babel/standalone';
+import ReactSandboxView from './views/ReactSandboxView';
+import AlgorithmPlaygroundView from './views/AlgorithmPlaygroundView';
+import { DEFAULT_ALGO, DEFAULT_CSS, DEFAULT_TSX } from './constants/defaults';
+import ModeSelector, { type SandboxMode } from './components/ModeSelector';
 import './App.css';
 
-const DEFAULT_TSX = 
-`import { useState } from "react";
-
-const Counter = () => {
-  const [count, setCount] = useState<number>(0);
-  return <div>
-    <div>{\`Counter: \${count}\`}</div>
-    <button style={{
-      padding: "4px",
-      border: "1px solid #000000" 
-    }} onClick={() => {setCount(count+1)}}>Add Count</button>
-  </div>
-}
-
-export default function App() {
-  return <div className="container">
-    <div className="welcome">Welcome to DevView</div>
-    <div className="text-3xl font-bold">Tailwind Hello World</div>
-    <hr />
-    <Counter />
-  </div>
-}
-`;
-
-const DEFAULT_CSS = 
-`/* CSS Sandbox */
-
-.welcome {
-  font-weight: bold;
-}
-
-.container {
-  display: flex;
-  flex-direction: column;
-}
-`;
-
-const DEFAULT_ALGO = `// Example: sum of array
-function sum(arr: number[]): number {
-  let total = 0;
-  for (const n of arr) total += n;
-  return total;
-}
-
-// Feel free to change this entrypoint.
-function main() {
-  const result = sum([1, 2, 3, 4, 5]);
-  console.log('Sum is', result);
-}
-
-main();
-`;
-
-type Mode = 'react' | 'algorithm';
-
 function App() {
-  const [mode, setMode] = useState<Mode>('algorithm');
+  const [mode, setMode] = useState<SandboxMode>('algorithm');
   const [tsxCode, setTsxCode] = useState(DEFAULT_TSX);
   const [cssCode, setCssCode] = useState(DEFAULT_CSS);
   const [compiledPreview, setCompiledPreview] = useState({ tsx: DEFAULT_TSX, css: DEFAULT_CSS });
@@ -112,28 +57,7 @@ function App() {
           <div className="text-md font-semibold tracking-tight text-slate-100">Frontend Interview Sandbox</div>
         </div>
         <div className="flex items-center gap-4">
-          <div className="flex items-center gap-1 bg-[#111827] rounded-md p-1 text-xs">
-            <button
-              onClick={() => setMode('algorithm')}
-              className={`px-3 py-1 rounded-md transition-colors ${
-                mode === 'algorithm'
-                  ? 'bg-indigo-600 text-white'
-                  : 'text-slate-300 hover:bg-[#1f2937]'
-              }`}
-            >
-              Algorithm Playground
-            </button>
-            <button
-              onClick={() => setMode('react')}
-              className={`px-3 py-1 rounded-md transition-colors ${
-                mode === 'react'
-                  ? 'bg-indigo-600 text-white'
-                  : 'text-slate-300 hover:bg-[#1f2937]'
-              }`}
-            >
-              React Sandbox
-            </button>
-          </div>
+          <ModeSelector mode={mode} onChange={setMode} />
           <button 
             onClick={handleRun}
             className="group flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2 rounded-md transition-all text-sm font-medium shadow-[0_0_15px_rgba(79,70,229,0.3)] hover:shadow-[0_0_20px_rgba(79,70,229,0.5)] active:scale-95"
@@ -147,39 +71,20 @@ function App() {
       {/* Workspace */}
       <div className="flex-1 flex overflow-hidden">
         {mode === 'react' ? (
-          <>
-            {/* Left Panel: React Editors */}
-            <div className="w-1/2 flex flex-col border-r border-[#2d2d2d] h-full shadow-2xl z-10 basis-1/2 shrink-0 max-w-[50%]">
-              <EditorPanel 
-                tsxCode={tsxCode} setTsxCode={setTsxCode} 
-                cssCode={cssCode} setCssCode={setCssCode} 
-              />
-            </div>
-            {/* Right Panel: React Preview */}
-            <div className="flex-1 w-1/2 h-full relative bg-white flex flex-col basis-1/2 shrink-0">
-              <div className="h-10 shrink-0 bg-[#0f0f0f] border-b border-[#2d2d2d] flex items-center px-4 text-xs font-mono text-slate-400 uppercase tracking-wider justify-between shadow-sm z-10 w-full relative">
-                <span>Preview Environment</span>
-                <span className="text-[10px] text-slate-600 flex items-center gap-1.5 bg-[#1a1a1a] px-2 py-0.5 rounded border border-[#333]">
-                  <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_5px_rgba(16,185,129,0.8)]"></div>
-                  Live
-                </span>
-              </div>
-              <div className="flex-1 min-h-0 bg-white w-full h-full relative">
-                <PreviewPanel tsxCode={compiledPreview.tsx} cssCode={compiledPreview.css} />
-              </div>
-            </div>
-          </>
+          <ReactSandboxView
+            tsxCode={tsxCode}
+            setTsxCode={setTsxCode}
+            cssCode={cssCode}
+            setCssCode={setCssCode}
+            compiledPreview={compiledPreview}
+          />
         ) : (
-          <>
-            {/* Left Panel: Algorithm Editor */}
-            <div className="w-1/2 flex flex-col border-r border-[#2d2d2d] h-full shadow-2xl z-10 basis-1/2 shrink-0 max-w-[50%]">
-              <AlgorithmPanel code={algoCode} setCode={setAlgoCode} />
-            </div>
-            {/* Right Panel: Console */}
-            <div className="flex-1 w-1/2 h-full relative bg-black flex flex-col basis-1/2 shrink-0">
-              <ConsolePanel output={consoleOutput} error={consoleError} />
-            </div>
-          </>
+          <AlgorithmPlaygroundView
+            algoCode={algoCode}
+            setAlgoCode={setAlgoCode}
+            consoleOutput={consoleOutput}
+            consoleError={consoleError}
+          />
         )}
       </div>
     </div>

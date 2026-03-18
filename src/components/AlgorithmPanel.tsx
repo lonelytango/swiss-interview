@@ -1,5 +1,6 @@
-import Editor, { type Monaco } from '@monaco-editor/react';
+import { type Monaco } from '@monaco-editor/react';
 import { useCallback } from 'react';
+import CodeEditor from './CodeEditor';
 
 interface AlgorithmPanelProps {
   code: string;
@@ -23,28 +24,7 @@ export default function AlgorithmPanel({ code, setCode }: AlgorithmPanelProps) {
         Algorithm.ts
       </div>
       <div className="flex-1 min-h-0 bg-[#1e1e1e] pt-2">
-        <Editor
-          beforeMount={handleBeforeMount}
-          path="Algorithm.ts"
-          height="100%"
-          defaultLanguage="typescript"
-          theme="vs-dark"
-          value={code}
-          onChange={(val) => setCode(val || '')}
-          options={{
-            minimap: { enabled: false },
-            fontSize: 14,
-            fontFamily: '"JetBrains Mono", "Fira Code", monospace',
-            wordWrap: 'on',
-            formatOnPaste: true,
-            scrollBeyondLastLine: false,
-            tabSize: 2,
-            padding: { top: 8, bottom: 8 },
-            bracketPairColorization: { enabled: true },
-            guides: { bracketPairs: true },
-            matchBrackets: 'always',
-          }}
-        />
+        <CodeEditor beforeMount={handleBeforeMount} path="Algorithm.ts" language="typescript" value={code} onChange={setCode} />
       </div>
     </div>
   );
