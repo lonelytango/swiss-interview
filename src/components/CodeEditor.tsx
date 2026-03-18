@@ -1,4 +1,4 @@
-import Editor, { type Monaco } from "@monaco-editor/react";
+import Editor, { type Monaco, type OnMount } from "@monaco-editor/react";
 
 type MonacoEditorOptions = Parameters<typeof Editor>[0]["options"];
 
@@ -27,6 +27,11 @@ const DEFAULT_OPTIONS: MonacoEditorOptions = {
 	matchBrackets: "always",
 };
 
+/** Generate a valid HTML id from the editor path (e.g. "App.tsx" -> "monaco-editor-app-tsx") */
+function pathToId(path: string): string {
+	return `monaco-editor-${path.replace(/[^a-zA-Z0-9-]/g, "-").toLowerCase()}`;
+}
+
 export default function CodeEditor({
 	value,
 	onChange,
@@ -42,9 +47,23 @@ export default function CodeEditor({
 		beforeMount?.(monaco);
 	};
 
+	const handleMount: OnMount = (editor) => {
+		// Add id/name to Monaco's internal textarea to fix browser autofill warnings.
+		const domNode = editor.getDomNode?.();
+		if (domNode) {
+			const textarea = domNode.querySelector("textarea");
+			if (textarea) {
+				const id = pathToId(path);
+				textarea.id = id;
+				textarea.name = id;
+			}
+		}
+	};
+
 	return (
 		<Editor
 			beforeMount={handleBeforeMount}
+			onMount={handleMount}
 			path={path}
 			height={height}
 			defaultLanguage={language}
