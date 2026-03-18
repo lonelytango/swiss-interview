@@ -10,6 +10,20 @@ interface EditorPanelProps {
 export default function EditorPanel({ tsxCode, setTsxCode, cssCode, setCssCode }: EditorPanelProps) {
   
   const handleEditorBeforeMount = (monaco: Monaco) => {
+    monaco.editor.defineTheme('devview-dark', {
+      base: 'vs-dark',
+      inherit: true,
+      rules: [
+        // JSX
+        { token: 'tag', foreground: '569CD6' },
+        { token: 'tag.jsx', foreground: '569CD6' },
+        { token: 'delimiter.angle', foreground: '808080' },
+        { token: 'attribute.name', foreground: '9CDCFE' },
+        { token: 'attribute.value', foreground: 'CE9178' },
+      ],
+      colors: {},
+    });
+
     monaco.languages.typescript.typescriptDefaults.setCompilerOptions({
       jsx: monaco.languages.typescript.JsxEmit.ReactJSX,
       allowNonTsExtensions: true,
@@ -71,7 +85,7 @@ export default function EditorPanel({ tsxCode, setTsxCode, cssCode, setCssCode }
             path="App.tsx"
             height="100%"
             defaultLanguage="typescript"
-            theme="vs-dark"
+            theme="devview-dark"
             value={tsxCode}
             onChange={(val) => setTsxCode(val || '')}
             options={{
@@ -82,7 +96,10 @@ export default function EditorPanel({ tsxCode, setTsxCode, cssCode, setCssCode }
               formatOnPaste: true,
               scrollBeyondLastLine: false,
               tabSize: 2,
-              padding: { top: 8, bottom: 8 }
+              padding: { top: 8, bottom: 8 },
+              bracketPairColorization: { enabled: true },
+              guides: { bracketPairs: true },
+              matchBrackets: 'always',
             }}
           />
         </div>
