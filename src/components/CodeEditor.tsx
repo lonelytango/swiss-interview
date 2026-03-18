@@ -33,26 +33,12 @@ export default function CodeEditor({
   path,
   language,
   height = '100%',
-  theme = 'devview-dark',
+  theme = 'vs-dark',
   options,
   beforeMount,
 }: CodeEditorProps) {
   const handleBeforeMount = (monaco: Monaco) => {
-    // Define once, safe to call repeatedly.
-    monaco.editor.defineTheme('devview-dark', {
-      base: 'vs-dark',
-      inherit: true,
-      rules: [
-        // JSX-ish highlighting tweaks (harmless for non-JSX languages)
-        { token: 'tag', foreground: '569CD6' },
-        { token: 'tag.jsx', foreground: '569CD6' },
-        { token: 'delimiter.angle', foreground: '808080' },
-        { token: 'attribute.name', foreground: '9CDCFE' },
-        { token: 'attribute.value', foreground: 'CE9178' },
-      ],
-      colors: {},
-    });
-
+    // Keep Monaco setup (TS compiler options, extra libs, etc.) in callers.
     beforeMount?.(monaco);
   };
 

@@ -1,5 +1,7 @@
 import EditorPanel from '../components/EditorPanel';
 import PreviewPanel from '../components/PreviewPanel';
+import { useCallback, useState } from 'react';
+import ConsolePanel from '../components/ConsolePanel';
 
 interface ReactSandboxViewProps {
   tsxCode: string;
@@ -16,6 +18,23 @@ export default function ReactSandboxView({
   setCssCode,
   compiledPreview,
 }: ReactSandboxViewProps) {
+  const [previewConsoleOutput, setPreviewConsoleOutput] = useState('');
+  const [previewConsoleError, setPreviewConsoleError] = useState<string | null>(null);
+
+  const handleConsoleOutput = useCallback((message: string) => {
+    setPreviewConsoleOutput((prev) => (prev ? `${prev}\n${message}` : message));
+  }, []);
+
+  const handleConsoleError = useCallback((message: string) => {
+    setPreviewConsoleError(message);
+    setPreviewConsoleOutput('');
+  }, []);
+
+  const handleConsoleClear = useCallback(() => {
+    setPreviewConsoleError(null);
+    setPreviewConsoleOutput('');
+  }, []);
+
   return (
     <>
       {/* Left Panel: React Editors */}
@@ -31,8 +50,19 @@ export default function ReactSandboxView({
             Live
           </span>
         </div>
-        <div className="flex-1 min-h-0 bg-white w-full h-full relative">
-          <PreviewPanel tsxCode={compiledPreview.tsx} cssCode={compiledPreview.css} />
+        <div className="flex-1 min-h-0 bg-white w-full h-full relative flex flex-col">
+          <div className="flex-1 min-h-0 relative">
+            <PreviewPanel
+              tsxCode={compiledPreview.tsx}
+              cssCode={compiledPreview.css}
+              onConsoleOutput={handleConsoleOutput}
+              onConsoleError={handleConsoleError}
+              onConsoleClear={handleConsoleClear}
+            />
+          </div>
+          <div className="h-1/4 min-h-[140px] border-t border-[#2d2d2d]">
+            <ConsolePanel output={previewConsoleOutput} error={previewConsoleError} />
+          </div>
         </div>
       </div>
     </>
