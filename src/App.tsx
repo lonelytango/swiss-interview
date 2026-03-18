@@ -4,21 +4,41 @@ import PreviewPanel from './components/PreviewPanel';
 import { Play, Code2 } from 'lucide-react';
 import './App.css';
 
-const DEFAULT_TSX = `
+const DEFAULT_TSX = 
+`import { useState } from "react";
+
+const Counter = () => {
+  const [count, setCount] = useState<number>(0);
+  return <div>
+    <div>{\`Counter: \${count}\`}</div>
+    <button style={{
+      padding: "4px",
+      border: "1px solid #000000" 
+    }} onClick={() => {setCount(count+1)}}>Add Count</button>
+  </div>
+}
+
 export default function App() {
-  return <>
+  return <div className="container">
     <div className="welcome">Welcome to DevView</div>
     <div className="text-3xl font-bold">Tailwind Hello World</div>
-  </>
+    <hr />
+    <Counter />
+  </div>
 }
 `;
 
-const DEFAULT_CSS = `/* Custom CSS Sandbox */
+const DEFAULT_CSS = 
+`/* CSS Sandbox */
 
 .welcome {
   font-weight: bold;
 }
 
+.container {
+  display: flex;
+  flex-direction: column;
+}
 `;
 
 function App() {
@@ -36,7 +56,7 @@ function App() {
       <header className="h-14 shrink-0 flex items-center justify-between px-6 bg-[#0f0f0f] border-b border-[#2d2d2d]">
         <div className="flex items-center gap-3 text-indigo-400">
           <Code2 size={24} />
-          <h1 className="text-md font-semibold tracking-tight text-slate-100">DevView</h1>
+          <div className="text-md font-semibold tracking-tight text-slate-100">Frontend Interview Sandbox</div>
         </div>
         
         <div className="flex items-center gap-4">

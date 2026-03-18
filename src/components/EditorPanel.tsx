@@ -19,11 +19,26 @@ export default function EditorPanel({ tsxCode, setTsxCode, cssCode, setCssCode }
       allowJs: true,
     });
 
+    // Provide minimal React typings for the in-app TSX sandbox.
+    // These live in Monaco's virtual FS and are independent of the host app's TS config.
     monaco.languages.typescript.typescriptDefaults.addExtraLib(
-      `declare module 'react/jsx-runtime' {
+      `declare module "react" {
+        export type Dispatch<A> = (value: A) => void;
+        export type SetStateAction<S> = S | ((prevState: S) => S);
+        export function useState<S>(initialState: S | (() => S)): [S, Dispatch<SetStateAction<S>>];
+        export function useState<S = undefined>(): [S | undefined, Dispatch<SetStateAction<S | undefined>>];
+        export function useEffect(effect: () => void | (() => void), deps?: readonly unknown[]): void;
+        export function useMemo<T>(factory: () => T, deps: readonly unknown[]): T;
+        export function useCallback<T extends (...args: any[]) => any>(callback: T, deps: readonly unknown[]): T;
+        export function useRef<T>(initialValue: T): { current: T };
+        export function useRef<T>(initialValue: T | null): { current: T | null };
         export const Fragment: any;
-        export const jsx: any;
-        export const jsxs: any;
+        export const StrictMode: any;
+        const React: any;
+        export default React;
+      }
+      declare module "react-dom/client" {
+        export function createRoot(container: Element | DocumentFragment): { render(node: any): void };
       }
       declare namespace JSX {
         interface IntrinsicElements {
@@ -31,6 +46,15 @@ export default function EditorPanel({ tsxCode, setTsxCode, cssCode, setCssCode }
         }
       }`,
       'file:///node_modules/@types/react/index.d.ts'
+    );
+
+    monaco.languages.typescript.typescriptDefaults.addExtraLib(
+      `declare module "react/jsx-runtime" {
+        export const Fragment: any;
+        export const jsx: any;
+        export const jsxs: any;
+      }`,
+      'file:///node_modules/@types/react/jsx-runtime.d.ts'
     );
   };
 
