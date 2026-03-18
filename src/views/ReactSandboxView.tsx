@@ -44,11 +44,7 @@ export default function ReactSandboxView({
       {/* Right Panel: React Preview */}
       <div className="flex-1 w-1/2 h-full relative bg-white flex flex-col basis-1/2 shrink-0">
         <div className="h-10 shrink-0 bg-[#0f0f0f] border-b border-[#2d2d2d] flex items-center px-4 text-xs font-mono text-slate-400 uppercase tracking-wider justify-between shadow-sm z-10 w-full relative">
-          <span>Preview Environment</span>
-          <span className="text-[10px] text-slate-600 flex items-center gap-1.5 bg-[#1a1a1a] px-2 py-0.5 rounded border border-[#333]">
-            <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_5px_rgba(16,185,129,0.8)]"></div>
-            Live
-          </span>
+          Preview Environment
         </div>
         <div className="flex-1 min-h-0 bg-white w-full h-full relative flex flex-col">
           <div className="flex-1 min-h-0 relative">
