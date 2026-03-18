@@ -1,5 +1,6 @@
 import { type Monaco } from '@monaco-editor/react';
 import CodeEditor from './CodeEditor';
+import { useCallback, useRef, useState } from 'react';
 
 interface EditorPanelProps {
   tsxCode: string;
@@ -9,6 +10,11 @@ interface EditorPanelProps {
 }
 
 export default function EditorPanel({ tsxCode, setTsxCode, cssCode, setCssCode }: EditorPanelProps) {
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const [tsxHeight, setTsxHeight] = useState<number>(50); // percentage
+  const [isResizing, setIsResizing] = useState(false);
+  const isPointerDownRef = useRef(false);
+  const pointerIdRef = useRef<number | null>(null);
   
   const handleEditorBeforeMount = (monaco: Monaco) => {
     monaco.languages.typescript.typescriptDefaults.setCompilerOptions({
@@ -59,10 +65,22 @@ export default function EditorPanel({ tsxCode, setTsxCode, cssCode, setCssCode }
     );
   };
 
+  const setHeightFromClientY = useCallback((clientY: number) => {
+    if (!containerRef.current) return;
+    const rect = containerRef.current.getBoundingClientRect();
+    const offsetY = clientY - rect.top;
+    const percentage = (offsetY / rect.height) * 100;
+    const clamped = Math.min(80, Math.max(20, percentage));
+    setTsxHeight(clamped);
+  }, []);
+
   return (
-    <div className="flex flex-col h-full w-full">
+    <div ref={containerRef} className="flex flex-col h-full w-full overflow-hidden">
       {/* TSX Editor */}
-      <div className="flex-1 flex flex-col min-h-0 border-b border-[#2d2d2d]">
+      <div
+        className="flex flex-col min-h-0"
+        style={{ flexBasis: `${tsxHeight}%`, maxHeight: `${tsxHeight}%` }}
+      >
         <div className="h-10 shrink-0 bg-[#0f0f0f] flex items-center px-4 text-xs font-mono text-slate-400 uppercase tracking-wider shadow-sm z-10">
           Component.tsx
         </div>
@@ -77,9 +95,69 @@ export default function EditorPanel({ tsxCode, setTsxCode, cssCode, setCssCode }
         </div>
       </div>
       
+      {/* Drag Handle */}
+      <div
+        className={`relative z-20 flex items-center w-full h-[10px] cursor-row-resize transition-colors ${
+          isResizing ? 'bg-indigo-500/20' : 'bg-transparent'
+        }`}
+        onPointerDown={(e) => {
+          if (e.button !== 0) return;
+          isPointerDownRef.current = true;
+          pointerIdRef.current = e.pointerId;
+          setIsResizing(true);
+
+          try {
+            document.body.style.userSelect = 'none';
+          } catch (_) {}
+
+          try {
+            (e.currentTarget as HTMLDivElement).setPointerCapture(e.pointerId);
+          } catch (_) {}
+
+          setHeightFromClientY(e.clientY);
+        }}
+        onPointerMove={(e) => {
+          if (!isPointerDownRef.current) return;
+          setHeightFromClientY(e.clientY);
+        }}
+        onPointerUp={(e) => {
+          if (!isPointerDownRef.current) return;
+          if (pointerIdRef.current === e.pointerId) {
+            isPointerDownRef.current = false;
+            pointerIdRef.current = null;
+            setIsResizing(false);
+            try {
+              document.body.style.userSelect = '';
+            } catch (_) {}
+          }
+          try {
+            (e.currentTarget as HTMLDivElement).releasePointerCapture(e.pointerId);
+          } catch (_) {}
+        }}
+        onPointerCancel={(e) => {
+          if (!isPointerDownRef.current) return;
+          if (pointerIdRef.current === e.pointerId) {
+            isPointerDownRef.current = false;
+            pointerIdRef.current = null;
+            setIsResizing(false);
+            try {
+              document.body.style.userSelect = '';
+            } catch (_) {}
+          }
+        }}
+      >
+        <div className="w-full h-full flex items-center justify-center">
+          <div className="w-full h-[2px] bg-[#2d2d2d] shadow-[0_0_0_1px_rgba(0,0,0,0.15)]" />
+          <div className="w-[38px] h-[3px] rounded-full bg-[#e5e7eb]/80" />
+        </div>
+      </div>
+
       {/* CSS Editor */}
-      <div className="flex-1 flex flex-col min-h-0">
-        <div className="h-10 shrink-0 bg-[#0f0f0f] border-t border-[#3d3d3d] flex items-center px-4 text-xs font-mono text-slate-400 uppercase tracking-wider shadow-sm z-10">
+      <div
+        className="flex flex-col min-h-0"
+        style={{ flexBasis: `${100 - tsxHeight}%`, maxHeight: `${100 - tsxHeight}%` }}
+      >
+        <div className="h-10 shrink-0 bg-[#0f0f0f] flex items-center px-4 text-xs font-mono text-slate-400 uppercase tracking-wider shadow-sm z-10 border-t border-[#3d3d3d]">
           styles.css
         </div>
         <div className="flex-1 min-h-0 pt-2 bg-[#1e1e1e]">
