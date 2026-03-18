@@ -1,121 +1,83 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import { useState } from 'react';
+import EditorPanel from './components/EditorPanel';
+import PreviewPanel from './components/PreviewPanel';
+import { Play, Code2 } from 'lucide-react';
+import './App.css';
 
-function App() {
-  const [count, setCount] = useState(0)
+const DEFAULT_TSX = `
+export default function App() {
+  return <>
+    <div className="welcome">Welcome to DevView</div>
+    <div className="text-3xl font-bold">Tailwind Hello World</div>
+  </>
+}
+`;
 
-  return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+const DEFAULT_CSS = `/* Custom CSS Sandbox */
 
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+.welcome {
+  font-weight: bold;
 }
 
-export default App
+`;
+
+function App() {
+  const [tsxCode, setTsxCode] = useState(DEFAULT_TSX);
+  const [cssCode, setCssCode] = useState(DEFAULT_CSS);
+  const [compiledPreview, setCompiledPreview] = useState({ tsx: DEFAULT_TSX, css: DEFAULT_CSS });
+
+  const handleRun = () => {
+    setCompiledPreview({ tsx: tsxCode, css: cssCode });
+  };
+
+  return (
+    <div className="h-screen w-screen flex flex-col bg-[#1e1e1e] text-slate-200 overflow-hidden font-sans">
+      {/* Header */}
+      <header className="h-14 shrink-0 flex items-center justify-between px-6 bg-[#0f0f0f] border-b border-[#2d2d2d]">
+        <div className="flex items-center gap-3 text-indigo-400">
+          <Code2 size={24} />
+          <h1 className="text-md font-semibold tracking-tight text-slate-100">DevView</h1>
+        </div>
+        
+        <div className="flex items-center gap-4">
+          <button 
+            onClick={handleRun}
+            className="group flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2 rounded-md transition-all text-sm font-medium shadow-[0_0_15px_rgba(79,70,229,0.3)] hover:shadow-[0_0_20px_rgba(79,70,229,0.5)] active:scale-95"
+          >
+            <Play size={16} className="fill-current group-hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.6)] transition-all" />
+            Run Code
+          </button>
+        </div>
+      </header>
+      
+      {/* Workspace */}
+      <div className="flex-1 flex overflow-hidden">
+        {/* Left Panel: Editors */}
+        <div className="w-1/2 flex flex-col border-r border-[#2d2d2d] h-full shadow-2xl z-10 basis-1/2 shrink-0 max-w-[50%]">
+           <EditorPanel 
+              tsxCode={tsxCode} setTsxCode={setTsxCode} 
+              cssCode={cssCode} setCssCode={setCssCode} 
+           />
+        </div>
+        
+        {/* Right Panel: Preview */}
+        <div className="flex-1 w-1/2 h-full relative bg-white flex flex-col basis-1/2 shrink-0">
+           {/* Preview Toolbar */}
+           <div className="h-10 shrink-0 bg-[#0f0f0f] border-b border-[#2d2d2d] flex items-center px-4 text-xs font-mono text-slate-400 uppercase tracking-wider justify-between shadow-sm z-10 w-full relative">
+             <span>Preview Environment</span>
+             <span className="text-[10px] text-slate-600 flex items-center gap-1.5 bg-[#1a1a1a] px-2 py-0.5 rounded border border-[#333]">
+                <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_5px_rgba(16,185,129,0.8)]"></div>
+                Live
+             </span>
+           </div>
+           
+           <div className="flex-1 min-h-0 bg-white w-full h-full relative">
+             <PreviewPanel tsxCode={compiledPreview.tsx} cssCode={compiledPreview.css} />
+           </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default App;
