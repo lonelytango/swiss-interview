@@ -15,6 +15,9 @@ export default defineConfig(() => {
   return {
     base,
     plugins: [react(), tailwindcss()],
+    optimizeDeps: {
+      exclude: ['pyodide'],
+    },
     server: {
       port: 3000,
     },

@@ -1,4 +1,4 @@
-export type SandboxMode = 'react' | 'algorithm';
+export type SandboxMode = 'react' | 'algorithm' | 'python';
 
 interface ModeSelectorProps {
   mode: SandboxMode;
@@ -23,6 +23,14 @@ export default function ModeSelector({ mode, onChange }: ModeSelectorProps) {
         }`}
       >
         React Sandbox
+      </button>
+      <button
+        onClick={() => onChange('python')}
+        className={`px-3 py-1 rounded-md transition-colors ${
+          mode === 'python' ? 'bg-indigo-600 text-white' : 'text-slate-300 hover:bg-gray-500'
+        }`}
+      >
+        Python
       </button>
     </div>
   );

@@ -62,3 +62,14 @@ function sum(arr: number[]): number {
 const result = sum([1, 2, 3, 4, 5]);
 console.log('Sum is', result);
 `;
+
+export const DEFAULT_PYTHON = `# Example: sum of a list
+def sum_list(nums: list[int]) -> int:
+    total = 0
+    for n in nums:
+        total += n
+    return total
+
+result = sum_list([1, 2, 3, 4, 5])
+print("Sum is", result)
+`;

@@ -1,9 +1,11 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Play, Code2 } from 'lucide-react';
 import * as Babel from '@babel/standalone';
+import type { PyodideInterface } from 'pyodide';
 import ReactSandboxView from './views/ReactSandboxView';
 import AlgorithmPlaygroundView from './views/AlgorithmPlaygroundView';
-import { DEFAULT_ALGO, DEFAULT_CSS, DEFAULT_TSX } from './constants/defaults';
+import PythonPlaygroundView from './views/PythonPlaygroundView';
+import { DEFAULT_ALGO, DEFAULT_CSS, DEFAULT_PYTHON, DEFAULT_TSX } from './constants/defaults';
 import ModeSelector, { type SandboxMode } from './components/ModeSelector';
 import './App.css';
 
@@ -13,40 +15,69 @@ function App() {
   const [cssCode, setCssCode] = useState(DEFAULT_CSS);
   const [compiledPreview, setCompiledPreview] = useState({ tsx: DEFAULT_TSX, css: DEFAULT_CSS });
   const [algoCode, setAlgoCode] = useState(DEFAULT_ALGO);
+  const [pythonCode, setPythonCode] = useState(DEFAULT_PYTHON);
   const [consoleOutput, setConsoleOutput] = useState('');
   const [consoleError, setConsoleError] = useState<string | null>(null);
+  const pyodideRef = useRef<PyodideInterface | null>(null);
 
   const handleRun = useCallback(() => {
-    if (mode === 'react') {
-      setCompiledPreview({ tsx: tsxCode, css: cssCode });
-      return;
-    }
+    void (async () => {
+      if (mode === 'react') {
+        setCompiledPreview({ tsx: tsxCode, css: cssCode });
+        return;
+      }
 
-    // Algorithm mode: run user code and capture console output.
-    setConsoleError(null);
-    setConsoleOutput('');
+      setConsoleError(null);
+      setConsoleOutput('');
 
-    try {
-      const logs: string[] = [];
-      const fakeConsole = Object.freeze({
-        log: (...args: unknown[]) => logs.push(args.map((a) => String(a)).join(' ')),
-      });
+      if (mode === 'algorithm') {
+        try {
+          const logs: string[] = [];
+          const fakeConsole = Object.freeze({
+            log: (...args: unknown[]) => logs.push(args.map((a) => String(a)).join(' ')),
+          });
 
-      const transpiled = Babel.transform(algoCode, {
-        presets: ['env', 'typescript'],
-        filename: 'Algorithm.ts',
-      }).code;
+          const transpiled = Babel.transform(algoCode, {
+            presets: ['env', 'typescript'],
+            filename: 'Algorithm.ts',
+          }).code;
 
-      if (!transpiled) throw new Error('Failed to transpile algorithm code.');
+          if (!transpiled) throw new Error('Failed to transpile algorithm code.');
 
-      // eslint-disable-next-line no-new-func
-      const fn = new Function('console', `"use strict";\n${transpiled}`);
-      fn(fakeConsole);
-      setConsoleOutput(logs.join('\n'));
-    } catch (err: any) {
-      setConsoleError(err?.message ?? String(err));
-    }
-  }, [mode, tsxCode, cssCode, algoCode]);
+          const fn = new Function('console', `"use strict";\n${transpiled}`);
+          fn(fakeConsole);
+          setConsoleOutput(logs.join('\n'));
+        } catch (err: unknown) {
+          setConsoleError(err instanceof Error ? err.message : String(err));
+        }
+        return;
+      }
+
+      if (mode === 'python') {
+        const stdoutChunks: string[] = [];
+        const stderrChunks: string[] = [];
+        try {
+          if (!pyodideRef.current) {
+            setConsoleOutput('Loading Python runtime…');
+            const { loadPyodide } = await import('pyodide');
+            pyodideRef.current = await loadPyodide();
+          }
+          const pyodide = pyodideRef.current;
+          pyodide.setStdout({ batched: (s: string) => stdoutChunks.push(s) });
+          pyodide.setStderr({ batched: (s: string) => stderrChunks.push(s) });
+          await pyodide.runPythonAsync(pythonCode, { filename: 'main.py' });
+          const parts: string[] = [];
+          if (stdoutChunks.length) parts.push(stdoutChunks.join(''));
+          if (stderrChunks.length) {
+            parts.push(stderrChunks.map((line) => `[stderr] ${line}`).join('\n'));
+          }
+          setConsoleOutput(parts.filter(Boolean).join('\n'));
+        } catch (err: unknown) {
+          setConsoleError(err instanceof Error ? err.message : String(err));
+        }
+      }
+    })();
+  }, [mode, tsxCode, cssCode, algoCode, pythonCode]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -91,6 +122,13 @@ function App() {
             cssCode={cssCode}
             setCssCode={setCssCode}
             compiledPreview={compiledPreview}
+          />
+        ) : mode === 'python' ? (
+          <PythonPlaygroundView
+            pythonCode={pythonCode}
+            setPythonCode={setPythonCode}
+            consoleOutput={consoleOutput}
+            consoleError={consoleError}
           />
         ) : (
           <AlgorithmPlaygroundView
