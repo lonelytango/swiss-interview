@@ -6,6 +6,7 @@ import ReactSandboxView from './views/ReactSandboxView';
 import AlgorithmPlaygroundView from './views/AlgorithmPlaygroundView';
 import PythonPlaygroundView from './views/PythonPlaygroundView';
 import { DEFAULT_ALGO, DEFAULT_CSS, DEFAULT_PYTHON, DEFAULT_TSX } from './constants/defaults';
+import { PYODIDE_INDEX_URL } from './constants/pyodide';
 import ModeSelector, { type SandboxMode } from './components/ModeSelector';
 import './App.css';
 
@@ -60,7 +61,7 @@ function App() {
           if (!pyodideRef.current) {
             setConsoleOutput('Loading Python runtime…');
             const { loadPyodide } = await import('pyodide');
-            pyodideRef.current = await loadPyodide();
+            pyodideRef.current = await loadPyodide({ indexURL: PYODIDE_INDEX_URL });
           }
           const pyodide = pyodideRef.current;
           pyodide.setStdout({ batched: (s: string) => stdoutChunks.push(s) });
