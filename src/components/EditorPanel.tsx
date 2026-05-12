@@ -62,7 +62,7 @@ export default function EditorPanel({ tsxCode, setTsxCode, cssCode, setCssCode }
   return (
     <ResizableSplit
       orientation="horizontal"
-      initialPrimaryPercent={50}
+      initialPrimaryPercent={75}
       minPrimaryPercent={20}
       maxPrimaryPercent={80}
       primaryWrapperClassName="h-full w-full overflow-hidden"

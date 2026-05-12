@@ -15,7 +15,7 @@ export interface CodeEditorProps {
 
 const DEFAULT_OPTIONS: MonacoEditorOptions = {
 	minimap: { enabled: false },
-	fontSize: 12,
+	fontSize: 14,
 	fontFamily: '"JetBrains Mono", "Fira Code", monospace',
 	wordWrap: "on",
 	formatOnPaste: true,
