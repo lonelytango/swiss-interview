@@ -32,6 +32,69 @@ function getErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
+function escapeHtml(value: string): string {
+  return value
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;');
+}
+
+function createErrorHtml(title: string, message: string): string {
+  return `
+    <!DOCTYPE html>
+    <html lang="en">
+      <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <style>
+          body {
+            margin: 0;
+            min-height: 100vh;
+            background: #fff7f7;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            color: #7f1d1d;
+          }
+
+          .error-panel {
+            margin: 16px;
+            border: 1px solid #fca5a5;
+            border-radius: 8px;
+            background: #fef2f2;
+            box-shadow: 0 10px 30px rgba(127, 29, 29, 0.12);
+            overflow: hidden;
+          }
+
+          .error-title {
+            padding: 10px 12px;
+            border-bottom: 1px solid #fecaca;
+            background: #fee2e2;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+          }
+
+          .error-message {
+            margin: 0;
+            padding: 12px;
+            white-space: pre-wrap;
+            font-size: 12px;
+            line-height: 1.5;
+          }
+        </style>
+      </head>
+      <body>
+        <section class="error-panel">
+          <div class="error-title">${escapeHtml(title)}</div>
+          <pre class="error-message">${escapeHtml(message)}</pre>
+        </section>
+      </body>
+    </html>
+  `;
+}
+
 export default function PreviewPanel({
   tsxCode,
   cssCode,
@@ -69,6 +132,9 @@ export default function PreviewPanel({
       compiledCode = result.code || '';
     } catch (err: unknown) {
       const msg = getErrorMessage(err);
+      if (iframeRef.current) {
+        iframeRef.current.srcdoc = createErrorHtml('Compile Error', msg);
+      }
       onConsoleError?.(`Compile Error: ${msg}`);
       return;
     }
@@ -100,6 +166,26 @@ export default function PreviewPanel({
               try {
                 window.parent && window.parent.postMessage({ source: __DEVVIEW_SOURCE__, type, message }, '*');
               } catch (_) {}
+            }
+
+            function __renderError(title, message) {
+              const root = document.getElementById('root') || document.body;
+              root.innerHTML = '';
+
+              const panel = document.createElement('section');
+              panel.style.cssText = 'margin:16px;border:1px solid #fca5a5;border-radius:8px;background:#fef2f2;color:#7f1d1d;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;box-shadow:0 10px 30px rgba(127,29,29,0.12);overflow:hidden;';
+
+              const heading = document.createElement('div');
+              heading.style.cssText = 'padding:10px 12px;border-bottom:1px solid #fecaca;background:#fee2e2;font-size:12px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;';
+              heading.textContent = title;
+
+              const body = document.createElement('pre');
+              body.style.cssText = 'margin:0;padding:12px;white-space:pre-wrap;font-size:12px;line-height:1.5;';
+              body.textContent = message;
+
+              panel.appendChild(heading);
+              panel.appendChild(body);
+              root.appendChild(panel);
             }
 
             function __stringifyArg(arg) {
@@ -141,6 +227,7 @@ export default function PreviewPanel({
 
             window.addEventListener('error', (event) => {
               const message = (event && event.message) ? event.message : 'Unknown error';
+              __renderError('Runtime Error', message);
               __post('runtime-error', message);
             });
 
@@ -150,6 +237,7 @@ export default function PreviewPanel({
                 (reason && reason.message) ? reason.message :
                 (typeof reason === 'string') ? reason :
                 'Unhandled promise rejection';
+              __renderError('Unhandled Promise Rejection', message);
               __post('runtime-error', message);
             });
 
@@ -177,12 +265,12 @@ export default function PreviewPanel({
               } else {
                 const msg = 'Could not find a default export component.';
                 __post('runtime-error', msg);
-                document.getElementById('root').innerHTML = '<div style="color:#ef4444;padding:20px;font-family:monospace;background:#fef2f2;border-bottom:1px solid #fca5a5;">Error: ' + msg + '</div>';
+                __renderError('Runtime Error', msg);
               }
             } catch (err) {
               const msg = err && err.message ? err.message : String(err);
               __post('runtime-error', msg);
-              document.getElementById('root').innerHTML = '<div style="color:#ef4444;padding:20px;font-family:monospace;background:#fef2f2;border-bottom:1px solid #fca5a5;">Runtime Error: ' + msg + '</div>';
+              __renderError('Runtime Error', msg);
             }
           </script>
         </body>

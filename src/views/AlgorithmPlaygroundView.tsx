@@ -7,6 +7,7 @@ interface AlgorithmPlaygroundViewProps {
   setAlgoCode: (val: string) => void;
   consoleOutput: string;
   consoleError: string | null;
+  onConsoleClear: () => void;
 }
 
 export default function AlgorithmPlaygroundView({
@@ -14,6 +15,7 @@ export default function AlgorithmPlaygroundView({
   setAlgoCode,
   consoleOutput,
   consoleError,
+  onConsoleClear,
 }: AlgorithmPlaygroundViewProps) {
   return (
     <ResizableSplit
@@ -24,8 +26,7 @@ export default function AlgorithmPlaygroundView({
       primaryWrapperClassName="flex flex-col border-r border-[#2d2d2d] h-full shadow-2xl z-10"
       secondaryWrapperClassName="relative h-full bg-black flex flex-col"
       primary={<AlgorithmPanel code={algoCode} setCode={setAlgoCode} />}
-      secondary={<ConsolePanel output={consoleOutput} error={consoleError} />}
+      secondary={<ConsolePanel output={consoleOutput} error={consoleError} onClear={onConsoleClear} />}
     />
   );
 }
-

@@ -10,6 +10,7 @@ interface ReactSandboxViewProps {
   cssCode: string;
   setCssCode: (val: string) => void;
   compiledPreview: { tsx: string; css: string };
+  onPreviewError: () => void;
 }
 
 export default function ReactSandboxView({
@@ -18,6 +19,7 @@ export default function ReactSandboxView({
   cssCode,
   setCssCode,
   compiledPreview,
+  onPreviewError,
 }: ReactSandboxViewProps) {
   const [previewConsoleOutput, setPreviewConsoleOutput] = useState('');
   const [previewConsoleError, setPreviewConsoleError] = useState<string | null>(null);
@@ -27,9 +29,10 @@ export default function ReactSandboxView({
   }, []);
 
   const handleConsoleError = useCallback((message: string) => {
+    onPreviewError();
     setPreviewConsoleError(message);
     setPreviewConsoleOutput('');
-  }, []);
+  }, [onPreviewError]);
 
   const handleConsoleClear = useCallback(() => {
     setPreviewConsoleError(null);
@@ -53,22 +56,29 @@ export default function ReactSandboxView({
             Preview Environment
           </div>
           <div className="flex-1 min-h-0 bg-white w-full h-full relative flex flex-col">
-            <div className="flex-1 min-h-0 relative">
-              <PreviewPanel
-                tsxCode={compiledPreview.tsx}
-                cssCode={compiledPreview.css}
-                onConsoleOutput={handleConsoleOutput}
-                onConsoleError={handleConsoleError}
-                onConsoleClear={handleConsoleClear}
-              />
-            </div>
-            <div className="h-1/4 min-h-[140px] border-t border-[#2d2d2d]">
-              <ConsolePanel output={previewConsoleOutput} error={previewConsoleError} />
-            </div>
+            <ResizableSplit
+              orientation="horizontal"
+              initialPrimaryPercent={75}
+              minPrimaryPercent={35}
+              maxPrimaryPercent={90}
+              primaryWrapperClassName="relative min-h-0 bg-white"
+              secondaryWrapperClassName="min-h-[140px] border-t border-[#2d2d2d]"
+              primary={
+                <PreviewPanel
+                  tsxCode={compiledPreview.tsx}
+                  cssCode={compiledPreview.css}
+                  onConsoleOutput={handleConsoleOutput}
+                  onConsoleError={handleConsoleError}
+                  onConsoleClear={handleConsoleClear}
+                />
+              }
+              secondary={
+                <ConsolePanel output={previewConsoleOutput} error={previewConsoleError} onClear={handleConsoleClear} />
+              }
+            />
           </div>
         </div>
       }
     />
   );
 }
-
