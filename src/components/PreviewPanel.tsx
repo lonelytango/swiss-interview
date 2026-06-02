@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import * as Babel from '@babel/standalone';
 
 interface PreviewPanelProps {
@@ -11,6 +11,27 @@ interface PreviewPanelProps {
 
 const PREVIEW_POST_MESSAGE_SOURCE = 'devview-preview';
 
+interface PreviewMessage {
+  source: typeof PREVIEW_POST_MESSAGE_SOURCE;
+  type: 'runtime-error' | 'console';
+  message: string;
+}
+
+function isPreviewMessage(data: unknown): data is PreviewMessage {
+  if (!data || typeof data !== 'object') return false;
+
+  const record = data as Record<string, unknown>;
+  return (
+    record.source === PREVIEW_POST_MESSAGE_SOURCE &&
+    (record.type === 'runtime-error' || record.type === 'console') &&
+    typeof record.message === 'string'
+  );
+}
+
+function getErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
+
 export default function PreviewPanel({
   tsxCode,
   cssCode,
@@ -19,16 +40,15 @@ export default function PreviewPanel({
   onConsoleClear,
 }: PreviewPanelProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
-  const [_, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const onMessage = (event: MessageEvent) => {
-      const data = event.data as any;
-      if (!data || data.source !== PREVIEW_POST_MESSAGE_SOURCE) return;
-      if (data.type === 'runtime-error' && typeof data.message === 'string') {
+      const data = event.data;
+      if (!isPreviewMessage(data)) return;
+      if (data.type === 'runtime-error') {
         onConsoleError?.(`Runtime Error: ${data.message}`);
       }
-      if (data.type === 'console' && typeof data.message === 'string') {
+      if (data.type === 'console') {
         onConsoleOutput?.(data.message);
       }
     };
@@ -39,18 +59,16 @@ export default function PreviewPanel({
 
   useEffect(() => {
     let compiledCode = '';
-    setError(null);
     onConsoleClear?.();
     try {
       // Transpile TSX to executable JS
       const result = Babel.transform(tsxCode, {
         presets: ['env', 'react', 'typescript'],
-        filename: 'App.tsx'
+        filename: 'App.tsx',
       });
       compiledCode = result.code || '';
-    } catch (err: any) {
-      const msg = err?.message ?? String(err);
-      setError(msg);
+    } catch (err: unknown) {
+      const msg = getErrorMessage(err);
       onConsoleError?.(`Compile Error: ${msg}`);
       return;
     }
@@ -174,7 +192,7 @@ export default function PreviewPanel({
     if (iframeRef.current) {
       iframeRef.current.srcdoc = htmlContent;
     }
-  }, [tsxCode, cssCode]);
+  }, [tsxCode, cssCode, onConsoleClear, onConsoleError]);
 
   return (
     <div className="w-full h-full relative bg-white flex flex-col">

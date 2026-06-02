@@ -57,6 +57,13 @@ export default function ResizableSplit({
   const cursorClass = orientation === 'vertical' ? 'cursor-col-resize' : 'cursor-row-resize';
   const isVertical = orientation === 'vertical';
 
+  const finishResize = useCallback(() => {
+    isPointerDownRef.current = false;
+    pointerIdRef.current = null;
+    setIsResizing(false);
+    document.body.style.userSelect = '';
+  }, []);
+
   return (
     <div
       ref={containerRef}
@@ -93,14 +100,13 @@ export default function ResizableSplit({
           isPointerDownRef.current = true;
           pointerIdRef.current = e.pointerId;
           setIsResizing(true);
-
-          try {
-            document.body.style.userSelect = 'none';
-          } catch (_) {}
+          document.body.style.userSelect = 'none';
 
           try {
             (e.currentTarget as HTMLDivElement).setPointerCapture(e.pointerId);
-          } catch (_) {}
+          } catch {
+            // Some browsers can reject capture if the pointer is already gone.
+          }
 
           setPercentFromClient(e.clientX, e.clientY);
         }}
@@ -111,26 +117,18 @@ export default function ResizableSplit({
         onPointerUp={(e) => {
           if (!isPointerDownRef.current) return;
           if (pointerIdRef.current === e.pointerId) {
-            isPointerDownRef.current = false;
-            pointerIdRef.current = null;
-            setIsResizing(false);
-            try {
-              document.body.style.userSelect = '';
-            } catch (_) {}
+            finishResize();
           }
           try {
             (e.currentTarget as HTMLDivElement).releasePointerCapture(e.pointerId);
-          } catch (_) {}
+          } catch {
+            // Pointer capture may already have been released.
+          }
         }}
         onPointerCancel={(e) => {
           if (!isPointerDownRef.current) return;
           if (pointerIdRef.current === e.pointerId) {
-            isPointerDownRef.current = false;
-            pointerIdRef.current = null;
-            setIsResizing(false);
-            try {
-              document.body.style.userSelect = '';
-            } catch (_) {}
+            finishResize();
           }
         }}
       >
@@ -155,4 +153,3 @@ export default function ResizableSplit({
     </div>
   );
 }
-
